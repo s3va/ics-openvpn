@@ -27,6 +27,8 @@ import android.os.RemoteException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -48,7 +50,8 @@ public class ExternalOpenVPNService extends Service implements StateListener {
     private static final int SEND_TOALL = 0;
 
     private static final String EXTRA_INLINE_PROFILE_ALLOW_VPN_BYPASS = "de.blinkt.openvpn.api.ALLOW_VPN_BYPASS";
-
+    private static final String EXTRA_INLINE_PROFILE_VPN_IS_USED_FOR_ALL_APPS_BUT_EXCLUDE_SELECTED = "de.blinkt.openvpn.api.VPN_USED_BUT_EXCLUDE_SELECTED";
+    private static final String EXTRA_INLINE_PROFILE_APP_LIST = "de.blinkt.openvpn.api.APP_LIST";
     final RemoteCallbackList<IOpenVPNStatusCallback> mCallbacks =
             new RemoteCallbackList<>();
 
@@ -155,6 +158,15 @@ public class ExternalOpenVPNService extends Service implements StateListener {
             if (extras != null) {
                 vp.mAllowAppVpnBypass = extras.getBoolean(EXTRA_INLINE_PROFILE_ALLOW_VPN_BYPASS, false);
                 VpnStatus.logDebug("got extra " + EXTRA_INLINE_PROFILE_ALLOW_VPN_BYPASS + ", mAllowAppVpnBypass=" + vp.mAllowAppVpnBypass);
+
+                vp.mAllowedAppsVpnAreDisallowed = extras.getBoolean(EXTRA_INLINE_PROFILE_VPN_IS_USED_FOR_ALL_APPS_BUT_EXCLUDE_SELECTED, true);
+                VpnStatus.logDebug("got extra " + EXTRA_INLINE_PROFILE_VPN_IS_USED_FOR_ALL_APPS_BUT_EXCLUDE_SELECTED + ", mAllowAppVpnBypass=" + vp.mAllowedAppsVpnAreDisallowed);
+
+                ArrayList<String> appList = extras.getStringArrayList(EXTRA_INLINE_PROFILE_APP_LIST);
+                if(appList!=null && !appList.isEmpty()){
+                    vp.mAllowedAppsVpn=new HashSet<>(appList);
+                    VpnStatus.logDebug("updateProfileFromExtras: " + vp.mAllowedAppsVpn);
+                }
             }
         }
 
